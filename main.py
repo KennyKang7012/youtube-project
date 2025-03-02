@@ -1,13 +1,11 @@
 from youtube.llm import summarize_youtube, build_youtube_query_engine, get_youtube_info, qa_youtube, load_index
 from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from fastapi import FastAPI, Request, Response, status
-from dotenv import load_dotenv
 import re
 import shutil
-import chromadb
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import VectorStoreIndex
+# import chromadb
+# from llama_index.vector_stores.chroma import ChromaVectorStore
+# from llama_index.core import VectorStoreIndex
 
 def checkDateBase(llm):
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
