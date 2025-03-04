@@ -3,6 +3,7 @@ from llama_index.core import VectorStoreIndex, SummaryIndex, StorageContext
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.prompts.base import ChatPromptTemplate
 from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core.response.pprint_utils import pprint_response
 import chromadb, os, re
 
 chroma_storage_path = "./youtube_storage"
@@ -41,6 +42,17 @@ TEXT_QA_PROMPT_TMPL_MSGS = [
 ]
 
 MY_QA_PROMPT = ChatPromptTemplate(message_templates=TEXT_QA_PROMPT_TMPL_MSGS)
+
+def check_database_count(embed_model):
+    index = load_index(embed_model)
+    doc_result = index.vector_store.client.count()
+    print("資料筆數: ", doc_result)
+    doc = index.vector_store.client.peek()
+    if doc is not None:
+        print("資料內容: ", doc["documents"])
+    else:
+        print("資料內容為空")
+    return doc_result
 
 def load_data(youtube_link):
     print(f"影片連結 : '{youtube_link}'")
@@ -96,7 +108,7 @@ def get_youtube_info(query, llm, embed_model):
     })
 
     res = query_engine.query(query)
-    # print(res)
+    pprint_response(res, show_source=True, source_length=500)
     return res.response
 
 def qa_youtube(user_query, llm, embed_model):
@@ -137,6 +149,10 @@ def build_youtube_query_engine(youtube_link, llm, embed_model):
         
         # Build Indexing
         index = build_index(documents, embed_model)
+
+        # Check DataBase Counts
+        docs_count = check_database_count(embed_model)
+        print(f"\r\n====> 資料庫有{docs_count}資料\n")
     elif urls:
         print("Add New urls...")
         # Load Data
@@ -144,6 +160,10 @@ def build_youtube_query_engine(youtube_link, llm, embed_model):
         
         # Build Indexing
         index = build_index(documents, embed_model)
+
+        # Check DataBase Counts
+        docs_count = check_database_count(embed_model)
+        print(f"\r\n====> 資料庫有{docs_count}資料\n")
     else:
         print("Load Indexing...")
         # Load Indexing

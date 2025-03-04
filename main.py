@@ -3,33 +3,24 @@ from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import re
 import shutil
-# import chromadb
-# from llama_index.vector_stores.chroma import ChromaVectorStore
-# from llama_index.core import VectorStoreIndex
+import chromadb
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core import VectorStoreIndex
 
 def checkDateBase(llm):
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
-    # chroma_storage_path = "./youtube_storage"
-    # chroma_collection_name = "youtube"
-    # chroma_collection = chromadb.PersistentClient(path=chroma_storage_path)\
-    #                             .get_or_create_collection(chroma_collection_name)
-    # vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    
-    # index = VectorStoreIndex.from_vector_store(
-    #     vector_store=vector_store, 
-    #     embed_model=embed_model
-    # )
     index = load_index(embed_model)
-    print(f"list 內容...\n{list(index.docstore.docs.values())}")
+    doc_result = index.vector_store.client.count()
+    print("資料筆數: ", doc_result)
+    doc = index.vector_store.client.peek()
+    if doc is not None:
+        print("資料內容: ", doc["documents"])
+    else:
+        print("資料內容為空")
 
-    nodes = list(index.docstore.docs.values())
-    print(f"list長度...\n{len(nodes)}")
-    # print(chroma_collection.get_model())
-
-    print("\r\n..... 總結影片內容 .....\r\n")
-    query_engine = index.as_query_engine(llm=llm)
-    res = query_engine.query("請用繁體中文總結這篇影片的內容")
-    print(res)
+    # 列出所有 collections
+    print("列出所有 collections: ", index.vector_store.client.list_collections())
+    return doc_result
 
 
 def main():
@@ -49,7 +40,8 @@ def main():
         # print("使用者輸入的是:", user_input)
 
         if user_input == "查看資料庫內容":
-            checkDateBase(llm=llm)
+            docs = checkDateBase(llm=llm)
+            print(f"\r\n====> 資料庫有{docs}資料\n")
         else :
             message = user_input
             urls = re.findall(r'https?://[^\s)\]]+', message)
@@ -61,7 +53,6 @@ def main():
             else:
                 print('持續對話中...')
                 res = get_youtube_info(query=message, llm=llm, embed_model=embed_model)
-                # res = qa_youtube(user_query=message, llm=llm, embed_model=embed_model)
                 print(res)
 
 if __name__ == "__main__":
